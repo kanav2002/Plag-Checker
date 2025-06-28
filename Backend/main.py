@@ -1,127 +1,88 @@
 # backend/main.py
 
-from fastapi import FastAPI
+from typing import List
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 import json
 from pathlib import Path
+from sqlalchemy.orm import Session
+from fastapi import HTTPException
+
+# from models import models
+import models
+from database import SessionLocal, engine
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-class Item(BaseModel):
-    message: str
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-class User(BaseModel):
+
+class ProfessorCreate(BaseModel):
     username: str
     password: str
-    first_name: str
-    last_name: str
-    department: str
+    name: str
     email: str
 
-USER_DATA_FILE = Path("user_data.json")
+@app.post("/professors/")
+def create_professor(prof: ProfessorCreate, db: Session = Depends(get_db)):
+    db_prof = models.Professor(
+        username=prof.username,
+        password=prof.password,
+        name=prof.name,
+        email=prof.email
+    )
+    db.add(db_prof)
+    db.commit()
+    db.refresh(db_prof)
+    return {"message": "Professor created", "professor_id": db_prof.id}
 
-# Ensure file exists with empty list initially
-if not USER_DATA_FILE.exists():
-    USER_DATA_FILE.write_text("[]")
+# Response schema
+class ProfessorName(BaseModel):
+    name: str
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello FastAPI"}
+    class Config:
+        orm_mode = True
 
-@app.get("/get_users")
-def get_users():
-    # Load existing users
-    try:
-        with USER_DATA_FILE.open("r") as file:
-            users = json.load(file)
-    except json.JSONDecodeError:
-        users = []
-    except FileNotFoundError:
-        users = []
+# Endpoint to get all professor names
+@app.get("/professors/", response_model=List[ProfessorName])
+def get_all_professors(db: Session = Depends(get_db)):
+    professors = db.query(models.Professor).all()
+    return professors
 
-    return {"users": users}
+class ProfessorInfo(BaseModel):
+    id: int
+    username: str
+    name: str
+    email: str
 
-@app.post("/create_user")
-def create_user(user: User):
-    # TODO: check for duplicacies and incorrect formats
-    # Load existing users
-    try:
-        with USER_DATA_FILE.open("r") as file:
-            users = json.load(file)
-    except json.JSONDecodeError:
-        users = []
-    except FileNotFoundError:
-        users = []
-
-    users.append(user.model_dump())
-
-    # Save updated users back to file
-    with USER_DATA_FILE.open("w") as file:
-        json.dump(users, file, indent=2)
-
-    return {
-        "message": f"User {user.username} created successfully",
-        "user": user
-    }
+    class Config:
+        orm_mode = True
 
 
-@app.get("/{username}/info")
-def get_user_info(username: str):
-    # Load existing users
-    try:
-        with USER_DATA_FILE.open("r") as file:
-            users = json.load(file)
-    except json.JSONDecodeError:
-        users = []
-    except FileNotFoundError:
-        users = []
-
-    for user in users:
-        if user["username"] == username:
-            return {"user": user}
-
-    return {"message": "User not found"}
+@app.get("/professors/{username}", response_model=ProfessorInfo)
+def get_professor(username: str, db: Session = Depends(get_db)):
+    professor = db.query(models.Professor).filter(models.Professor.username == username).first()
+    if professor is None:
+        raise HTTPException(status_code=404, detail="Professor not found")
+    return professor
 
 
-@app.post("/{username}/change_password")
-def change_password(username: str, new_password: str):
-    # Load existing users
-    try:
-        with USER_DATA_FILE.open("r") as file:
-            users = json.load(file)
-    except json.JSONDecodeError:
-        users = []
-    except FileNotFoundError:
-        users = []
-
-    for user in users:
-        if user["username"] == username:
-            user["password"] = new_password
-            # Save updated users back to file
-            with USER_DATA_FILE.open("w") as file:
-                json.dump(users, file, indent=2)
-            return {"message": "Password changed successfully"}
-
-    return {"message": "User not found"}
+@app.delete("/professors/{username}")
+def delete_professor(username: str, db: Session = Depends(get_db)):
+    professor = db.query(models.Professor).filter(models.Professor.username == username).first()
+    if professor is None:
+        raise HTTPException(status_code=404, detail="Professor not found")
+    
+    db.delete(professor)
+    db.commit()
+    return {"message": f"Professor '{username}' deleted successfully."}
 
 
-@app.delete("/delete/{username}")
-def delete_user(username: str):
-    # Load existing users
-    try:
-        with USER_DATA_FILE.open("r") as file:
-            users = json.load(file)
-    except json.JSONDecodeError:
-        users = []
-    except FileNotFoundError:
-        users = []
-
-    for i, user in enumerate(users):
-        if user["username"] == username:
-            del users[i]
-            # Save updated users back to file
-            with USER_DATA_FILE.open("w") as file:
-                json.dump(users, file, indent=2)
-            return {"message": "User deleted successfully"}
-
-    return {"message": "User not found"}
+# # @app.post("{username}/create_course")
