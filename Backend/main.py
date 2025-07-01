@@ -44,14 +44,16 @@ def create_professor(prof: ProfessorCreate, db: Session = Depends(get_db)):
     return {"message": "Professor created", "professor_id": db_prof.id}
 
 # Response schema
-class ProfessorName(BaseModel):
+class ProfessorSummary(BaseModel):
+    id: int
+    username: str
     name: str
 
     class Config:
         orm_mode = True
 
 # Endpoint to get all professor names
-@app.get("/professors/", response_model=List[ProfessorName])
+@app.get("/professors/", response_model=List[ProfessorSummary])
 def get_all_professors(db: Session = Depends(get_db)):
     professors = db.query(models.Professor).all()
     return professors
@@ -85,4 +87,157 @@ def delete_professor(username: str, db: Session = Depends(get_db)):
     return {"message": f"Professor '{username}' deleted successfully."}
 
 
-# # @app.post("{username}/create_course")
+class CourseCreate(BaseModel):
+    code: str
+    name: str
+    professor_id: int  # ID of the professor teaching it
+
+
+@app.post("/courses/")
+def create_course(course: CourseCreate, db: Session = Depends(get_db)):
+    # Check if professor exists
+    professor = db.query(models.Professor).filter(models.Professor.id == course.professor_id).first()
+    if not professor:
+        raise HTTPException(status_code=404, detail="Professor not found")
+
+    db_course = models.Course(
+        code=course.code,
+        name=course.name,
+        professor_id=course.professor_id
+    )
+    db.add(db_course)
+    db.commit()
+    db.refresh(db_course)
+    return {"message": "Course created", "course_id": db_course.id}
+
+
+class ProfessorBasic(BaseModel):
+    id: int
+    name: str
+    username: str
+
+    class Config:
+        orm_mode = True
+
+@app.get("/courses/{course_id}/professor", response_model=ProfessorBasic)
+def get_course_professor(course_id: int, db: Session = Depends(get_db)):
+    course = db.query(models.Course).filter(models.Course.code == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    return course.professor
+
+
+class CourseInfo(BaseModel):
+    id: int
+    code: str
+    name: str
+
+    class Config:
+        orm_mode = True
+
+@app.get("/professors/{professor_id}/courses", response_model=List[CourseInfo])
+def get_courses_by_professor(professor_id: int, db: Session = Depends(get_db)):
+    professor = db.query(models.Professor).filter(models.Professor.id == professor_id).first()
+    if not professor:
+        raise HTTPException(status_code=404, detail="Professor not found")
+
+    return professor.courses
+
+
+# Response schema
+class CourseWithProfessor(BaseModel):
+    id: int
+    code: str
+    name: str
+    professor_name: str
+
+    class Config:
+        orm_mode = True
+
+
+@app.get("/courses/", response_model=List[CourseWithProfessor])
+def get_all_courses(db: Session = Depends(get_db)):
+    courses = db.query(models.Course).all()
+    response = []
+    for course in courses:
+        response.append(
+            CourseWithProfessor(
+                id=course.id,
+                code=course.code,
+                name=course.name,
+                professor_name=course.professor.name if course.professor else "Unknown"
+            )
+        )
+    return response
+
+
+class ExamCreate(BaseModel):
+    name: str
+
+@app.post("/professors/{prof_id}/courses/{course_id}/exams")
+def create_exam_under_course(
+    prof_id: int,
+    course_id: str,
+    exam: ExamCreate,
+    db: Session = Depends(get_db)
+):
+    course = db.query(models.Course).filter(
+        models.Course.code == course_id,
+        models.Course.professor_id == prof_id
+    ).first()
+
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found or professor does not teach this course")
+
+    db_exam = models.Exam(name=exam.name, course_id=course.id)
+    db.add(db_exam)
+    db.commit()
+    db.refresh(db_exam)
+    return {"message": "Exam created", "exam_id": db_exam.id}
+
+
+class ExamInfo(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        orm_mode = True
+
+@app.get("/professors/{prof_id}/courses/{course_id}/exams", response_model=List[ExamInfo])
+def get_exams_for_course(
+    prof_id: int,
+    course_id: str,
+    db: Session = Depends(get_db)
+):
+    course = db.query(models.Course).filter(
+        models.Course.code == course_id,
+        models.Course.professor_id == prof_id
+    ).first()
+
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found or professor not authorized")
+
+    return course.exams
+
+
+@app.delete("/professors/{prof_id}/courses/{course_id}/exams")
+def delete_all_exams_under_course(
+    prof_id: int,
+    course_id: str,  # Assuming this is the course *code*
+    db: Session = Depends(get_db)
+):
+    # Verify course belongs to professor
+    course = db.query(models.Course).filter(
+        models.Course.code == course_id,
+        models.Course.professor_id == prof_id
+    ).first()
+
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found or unauthorized")
+
+    # Delete all exams for the course
+    deleted_count = db.query(models.Exam).filter(models.Exam.course_id == course.id).delete()
+    db.commit()
+
+    return {"message": f"Deleted {deleted_count} exam(s) under course '{course_id}'"}

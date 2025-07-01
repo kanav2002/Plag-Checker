@@ -20,7 +20,7 @@ class Course(Base):
     professor_id = Column(Integer, ForeignKey("professors.id"))
 
     professor = relationship("Professor", back_populates="courses")
-    exams = relationship("Exam", back_populates="course")
+    exams = relationship("Exam", back_populates="course", cascade="all, delete")
 
 class Exam(Base):
     __tablename__ = "exams"
@@ -29,4 +29,4 @@ class Exam(Base):
     course_id = Column(Integer, ForeignKey("courses.id"))
 
     course = relationship("Course", back_populates="exams")
-    # TODO: STATS
+    # TODO: STATS (plag)
