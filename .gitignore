@@ -1,4 +1,7 @@
 plag_check
 /Backend/user_data.json
 /Backend/__pycache__/
-database.db
+*.db
+create_test_zip.py
+test_files/
+test_upload.zip

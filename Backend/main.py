@@ -1,12 +1,13 @@
 # backend/main.py
 
 from typing import List
-from fastapi import FastAPI, Depends
+import zipfile
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from pydantic import BaseModel
 import json
 from pathlib import Path
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
+import os
 
 # from models import models
 import models
@@ -241,3 +242,59 @@ def delete_all_exams_under_course(
     db.commit()
 
     return {"message": f"Deleted {deleted_count} exam(s) under course '{course_id}'"}
+
+
+@app.post("/professors/{prof_id}/courses/{course_code}/exams/{exam_id}/upload")
+def upload_zip(
+    prof_id: int,
+    course_code: str,
+    exam_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    exam = (
+        db.query(models.Exam)
+        .join(models.Course)
+        .filter(
+            models.Exam.id == exam_id,
+            models.Course.code == course_code,
+            models.Course.professor_id == prof_id
+        )
+        .first()
+    )
+
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam or ownership not valid")
+
+    upload_dir = f"uploads/p{prof_id}/c{course_code}/e{exam_id}"
+    os.makedirs(upload_dir, exist_ok=True)
+
+    zip_path = f"{upload_dir}/upload.zip"
+    with open(zip_path, "wb") as buffer:
+        buffer.write(file.file.read())
+
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(f"{upload_dir}/unzipped")
+
+    return {"message": "ZIP uploaded and extracted"}
+
+
+@app.get("/professors/{prof_id}/courses/{course_code}/exams/{exam_id}/files")
+def list_uploaded_files(
+    prof_id: int,
+    course_code: str,
+    exam_id: int
+):
+    unzip_dir = Path(f"uploads/p{prof_id}/c{course_code}/e{exam_id}/unzipped")
+
+    if not unzip_dir.exists() or not unzip_dir.is_dir():
+        raise HTTPException(status_code=404, detail="No extracted files found")
+
+    # List all files recursively
+    file_list = [
+        str(path.relative_to(unzip_dir))  # Show paths relative to unzip_dir
+        for path in unzip_dir.rglob("*")
+        if path.is_file()
+    ]
+
+    return {"files": file_list}
