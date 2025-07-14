@@ -10,7 +10,7 @@ class Professor(Base):
     name = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
 
-    courses = relationship("Course", back_populates="professor")
+    courses = relationship("Course", back_populates="professor", cascade="all, delete-orphan")
 
 class Course(Base):
     __tablename__ = "courses"
@@ -20,7 +20,7 @@ class Course(Base):
     professor_id = Column(Integer, ForeignKey("professors.id"))
 
     professor = relationship("Professor", back_populates="courses")
-    exams = relationship("Exam", back_populates="course", cascade="all, delete")
+    exams = relationship("Exam", back_populates="course", cascade="all, delete-orphan")
 
 class Exam(Base):
     __tablename__ = "exams"

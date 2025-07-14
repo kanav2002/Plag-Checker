@@ -8,14 +8,26 @@ import json
 from pathlib import Path
 from sqlalchemy.orm import Session
 import os
+from fastapi.responses import PlainTextResponse
+from urllib.parse import unquote
 
 # from models import models
 import models
 from database import SessionLocal, engine
 
+from fastapi.middleware.cors import CORSMiddleware
+
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_db():
     db = SessionLocal()
@@ -110,6 +122,20 @@ def create_course(course: CourseCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_course)
     return {"message": "Course created", "course_id": db_course.id}
+
+
+@app.delete("/courses/{course_code}")
+def delete_course(course_code: str, db: Session = Depends(get_db)):
+    course = db.query(models.Course).filter(models.Course.code == course_code).first()
+
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    db.delete(course)
+    db.commit()
+
+    return {"message": f"Course '{course_code}' deleted successfully."}
+
 
 
 class ProfessorBasic(BaseModel):
@@ -298,3 +324,24 @@ def list_uploaded_files(
     ]
 
     return {"files": file_list}
+
+
+@app.get("/professors/{prof_id}/courses/{course_code}/exams/{exam_id}/file")
+def get_file_content(
+    prof_id: int,
+    course_code: str,
+    exam_id: int,
+    filename: str  # Use query parameter: ?filename=some/path.py
+):
+    base_path = Path(f"uploads/p{prof_id}/c{course_code}/e{exam_id}/unzipped").resolve()
+    file_path = (base_path / unquote(filename)).resolve()
+
+    # Security check to avoid path traversal
+    if not str(file_path).startswith(str(base_path)) or not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found or invalid path")
+
+    try:
+        content = file_path.read_text()
+        return PlainTextResponse(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading file: {e}")
