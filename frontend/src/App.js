@@ -4,12 +4,12 @@ import axios from 'axios';
 
 function App() {
   const [professors, setProfessors] = useState([]);
-  const [courses, setCourses] = useState([]);
+  // const [courses, setCourses] = useState([]);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loggedInProf, setLoggedInProf] = useState(null);
   const [newProf, setNewProf] = useState({ username: '', password: '', name: '', email: '' });
-  const [newCourse, setNewCourse] = useState({ code: '', name: '', professor_id: '' });
+  // const [newCourse, setNewCourse] = useState({ code: '', name: '', professor_id: '' });
 
   const API = 'http://127.0.0.1:8000';
 
@@ -28,15 +28,15 @@ function App() {
     alert('Professor deleted');
   };
 
-  const getCourses = async () => {
-    const res = await axios.get(`${API}/courses/`);
-    setCourses(res.data);
-  };
+  // const getCourses = async () => {
+  //   const res = await axios.get(`${API}/courses/`);
+  //   setCourses(res.data);
+  // };
 
-  const createCourse = async () => {
-    await axios.post(`${API}/courses/`, newCourse);
-    alert('Course created');
-  };
+  // const createCourse = async () => {
+  //   await axios.post(`${API}/courses/`, newCourse);
+  //   alert('Course created');
+  // };
 
   const login = async () => {
     try {
@@ -73,7 +73,7 @@ function App() {
       <input placeholder="Username" onChange={(e) => setUsername(e.target.value)} />
       <button onClick={deleteProfessor}>Delete</button>
 
-      <h3>Get Courses</h3>
+      {/*<h3>Get Courses</h3>
       <button onClick={getCourses}>Get</button>
       <ul>
         {courses.map((c) => (
@@ -85,14 +85,14 @@ function App() {
       <input placeholder="Code" onChange={(e) => setNewCourse({ ...newCourse, code: e.target.value })} />
       <input placeholder="Name" onChange={(e) => setNewCourse({ ...newCourse, name: e.target.value })} />
       <input placeholder="Professor ID" onChange={(e) => setNewCourse({ ...newCourse, professor_id: e.target.value })} />
-      <button onClick={createCourse}>Create</button>
+      <button onClick={createCourse}>Create</button>*/}
 
       <h3>Login</h3>
       <input placeholder="Username" onChange={(e) => setUsername(e.target.value)} />
       <input placeholder="Password" type="password" onChange={(e) => setPassword(e.target.value)} />
       <button onClick={login}>Login</button>
 
-      {loggedInProf && (
+      {/* {loggedInProf && (
         <div>
           <h2>Welcome, {loggedInProf.name}</h2>
           <p>Email: {loggedInProf.email}</p>
@@ -107,7 +107,7 @@ function App() {
             ))}
           </ul>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
