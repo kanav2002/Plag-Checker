@@ -2,7 +2,7 @@
 
 from typing import List
 import zipfile
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Form
 from pydantic import BaseModel
 import json
 from pathlib import Path
@@ -73,6 +73,23 @@ def create_professor(prof: ProfessorCreate, db: Session = Depends(get_db)):
     return {"message": "Professor created", "professor username": db_prof.username}
 
 
+@app.post("/login")
+def login(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+    professor = db.query(models.Professor).filter(models.Professor.username == username).first()
+    if not professor:
+        raise HTTPException(status_code=404, detail="Professor not found")
+
+    if professor.password != password:
+        raise HTTPException(status_code=401, detail="Invalid password")
+
+    # Send relevant info (no password)
+    return {
+        "username": professor.username,
+        "name": professor.name,
+        "email": professor.email
+    }
+
+
 @app.delete("/professors/{username}")
 def delete_professor(username: str, db: Session = Depends(get_db)):
     professor = db.query(models.Professor).filter(models.Professor.username == username).first()
@@ -85,7 +102,6 @@ def delete_professor(username: str, db: Session = Depends(get_db)):
 
 
 class ProfessorInfo(BaseModel):
-    id: int
     username: str
     name: str
     email: str
