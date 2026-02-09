@@ -3,9 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello World</title>
+    <title>Plag Checker</title>
 </head>
 <body>
-    <div id="root"></div>
+    <div>
+        <h1>Plagiarism Checker</h1>
+        <button id="helloBtn">Say Hello</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        document.getElementById('helloBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('http://localhost:8080/api/hello');
+                const data = await response.text();
+                document.getElementById('response').innerHTML = `<h2>${data}</h2>`;
+            } catch (error) {
+                document.getElementById('response').innerHTML = `<h2>Error: ${error.message}</h2>`;
+            }
+        });
+    </script>
 </body>
 </html>
