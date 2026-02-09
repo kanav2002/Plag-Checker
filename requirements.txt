@@ -1,5 +1,0 @@
-flask
-uvicorn
-sqlalchemy
-python-multipart
-fastapi
