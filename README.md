@@ -82,7 +82,7 @@ The application uses H2 database for development and testing purposes:
 1. Ensure the backend application is running
 2. Open your browser and navigate to: `http://localhost:8080/h2-console`
 3. Use the following connection settings:
-   - **JDBC URL**: `jdbc:h2:mem:testdb`
+   - **JDBC URL**: `jdbc:h2:file:./data/testdb`
    - **Username**: `sa`
    - **Password**: `password`
 4. Click "Connect" to access the database
