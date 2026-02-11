@@ -34,7 +34,7 @@ plag-checker
 │               └── com
 │                   └── example
 │                       └── plagchecker
-│                           └── PlagCheckerApplicationTests.java
+│                           └── .....
 ├── frontend
 │   ├── package.json
 │   ├── public
@@ -42,6 +42,7 @@ plag-checker
 │   └── src
 │       ├── index.js
 │       └── App.js
+│       └── App.css
 └── README.md
 ```
 
