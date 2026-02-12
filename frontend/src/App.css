@@ -192,6 +192,206 @@ form {
     border-top: 1px solid #e2e8f0;
 }
 
+/* Dashboard Styles */
+.dashboard {
+    min-height: 100vh;
+    background: #f7fafc;
+}
+
+/* Navigation Header */
+.navbar {
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 64px;
+}
+
+.navbar-left h1 {
+    color: #667eea;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+}
+
+/* Profile Icon and Dropdown */
+.profile-container {
+    position: relative;
+}
+
+.profile-icon {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+    color: #4a5568;
+}
+
+.profile-icon:hover {
+    background: #f7fafc;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    margin-top: 8px;
+    overflow: hidden;
+    z-index: 1000;
+}
+
+.profile-info {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.profile-name {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.profile-username {
+    font-size: 0.875rem;
+    color: #718096;
+}
+
+.profile-actions {
+    padding: 0.5rem 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    color: #4a5568;
+    transition: background-color 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background: #f7fafc;
+}
+
+/* Main Content */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.welcome-section {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.welcome-section h1 {
+    color: #2d3748;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.welcome-section p {
+    color: #718096;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+/* Dashboard Cards */
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.card h3 {
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+}
+
+.card p {
+    color: #718096;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+/* Responsive Dashboard */
+@media (max-width: 768px) {
+    .navbar-content {
+        padding: 0 1rem;
+    }
+    
+    .navbar-left h1 {
+        font-size: 1.25rem;
+    }
+    
+    .main-content {
+        padding: 1.5rem 1rem;
+    }
+    
+    .welcome-section h1 {
+        font-size: 2rem;
+    }
+    
+    .dashboard-cards {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .profile-dropdown {
+        right: -1rem;
+        left: -1rem;
+        min-width: auto;
+    }
+}
+
 /* Responsive */
 @media (max-width: 480px) {
     .container {
