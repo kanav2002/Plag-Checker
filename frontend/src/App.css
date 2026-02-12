@@ -451,3 +451,22 @@ form {
         opacity: 1;
     }
 }
+
+/* Form Error Message */
+.form-error {
+    background: #fed7e2;
+    color: #742a2a;
+    border: 1px solid #fc8181;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-error:before {
+    content: "⚠";
+    font-weight: bold;
+}

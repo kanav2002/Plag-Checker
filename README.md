@@ -103,35 +103,7 @@ The application automatically creates the following tables:
 - **GET** `/api/instructors` - Get all instructors
 - **GET** `/api/instructors/{id}` - Get instructor by ID
 - **GET** `/api/instructors/username/{username}` - Get instructor by username
-
-### Example API Usage
-
-#### Create Instructor
-```bash
-curl -X POST http://localhost:8080/api/instructors \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "john_doe",
-    "password": "password123",
-    "firstName": "John",
-    "lastName": "Doe"
-  }'
-```
-
-#### Get All Instructors
-```bash
-curl http://localhost:8080/api/instructors
-```
-
-#### Get Instructor by ID
-```bash
-curl http://localhost:8080/api/instructors/1
-```
-
-#### Get Instructor by Username
-```bash
-curl http://localhost:8080/api/instructors/username/john_doe
-```
+- **PUT** `/api/instructors/password/{username}` - Change password of an instructor
 
 ## Features
 - Simple REST API that returns "Hello World" when accessed at the root URL

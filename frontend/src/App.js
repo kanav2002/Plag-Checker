@@ -30,6 +30,7 @@ function App() {
         newPassword: '',
         confirmPassword: ''
     });
+    const [passwordError, setPasswordError] = useState('');
 
     // Handle Sign In
     const handleSignIn = async (e) => {
@@ -103,8 +104,11 @@ function App() {
     const closeModals = () => {
         setShowSignInModal(false);
         setShowSignUpModal(false);
+        setShowSettingsModal(false);
         setSignInData({ username: '', password: '' });
         setSignUpData({ username: '', password: '', firstName: '', lastName: '' });
+        setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        setPasswordError('');
     };
 
     // Handle logout
@@ -129,8 +133,10 @@ function App() {
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
+        setPasswordError(''); // Clear any existing errors
+        
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            setMessage('New passwords do not match');
+            setPasswordError('New passwords do not match');
             return;
         }
         
@@ -149,21 +155,20 @@ function App() {
             if (response.ok) {
                 setShowSettingsModal(false);
                 setShowSuccessToast(true);
-                // Clear password form
                 setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+                setPasswordError(''); // Clear errors
                 
                 setTimeout(() => {
                     setShowSuccessToast(false);
-                    // Clear message and reset states before logout
                     setMessage('');
                     setShowProfileDropdown(false);
                     handleLogout();
                 }, 2000);
             } else {
-                setMessage('Invalid old password');
+                setPasswordError('Invalid old password');
             }
         } catch (error) {
-            setMessage('Error updating password');
+            setPasswordError('Error updating password');
         }
     };
 
@@ -432,6 +437,7 @@ function App() {
                             <h2>Change Password</h2>
                             <button className="close-btn" onClick={() => setShowSettingsModal(false)}>&times;</button>
                         </div>
+                        
                         <form onSubmit={handlePasswordChange}>
                             <div className="form-group">
                                 <label htmlFor="oldPassword">Current Password:</label>
@@ -466,8 +472,16 @@ function App() {
                                     required
                                 />
                             </div>
+                            
+                            {/* Error message display */}
+                            {passwordError && (
+                                <div className="form-error">
+                                    {passwordError}
+                                </div>
+                            )}
+                            
                             <div className="form-actions">
-                                <button type="button" className="btn btn-cancel" onClick={() => setShowSettingsModal(false)}>
+                                <button type="button" className="btn btn-cancel" onClick={closeModals}>
                                     Cancel
                                 </button>
                                 <button type="submit" className="btn btn-primary">
