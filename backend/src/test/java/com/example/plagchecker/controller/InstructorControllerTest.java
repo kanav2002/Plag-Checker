@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -193,5 +194,141 @@ class InstructorControllerTest {
         // When & Then
         mockMvc.perform(get("/api/instructors/username/"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updatePassword_ValidCredentials_ShouldReturnSuccessMessage() throws Exception {
+        // Given
+        Map<String, String> passwordRequest = Map.of(
+            "oldPassword", "password123",
+            "newPassword", "newPassword456"
+        );
+        given(instructorService.updatePassword("john_doe", "password123", "newPassword456"))
+            .willReturn(true);
+
+        // When & Then
+        mockMvc.perform(put("/api/instructors/password/john_doe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(passwordRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Password updated successfully"));
+    }
+
+    @Test
+    void updatePassword_InvalidOldPassword_ShouldReturnBadRequest() throws Exception {
+        // Given
+        Map<String, String> passwordRequest = Map.of(
+            "oldPassword", "wrongPassword",
+            "newPassword", "newPassword456"
+        );
+        given(instructorService.updatePassword("john_doe", "wrongPassword", "newPassword456"))
+            .willReturn(false);
+
+        // When & Then
+        mockMvc.perform(put("/api/instructors/password/john_doe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(passwordRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Invalid old password"));
+    }
+
+    @Test
+    void updatePassword_NonExistentUser_ShouldReturnBadRequest() throws Exception {
+        // Given
+        Map<String, String> passwordRequest = Map.of(
+            "oldPassword", "password123",
+            "newPassword", "newPassword456"
+        );
+        given(instructorService.updatePassword("nonexistent", "password123", "newPassword456"))
+            .willReturn(false);
+
+        // When & Then
+        mockMvc.perform(put("/api/instructors/password/nonexistent")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(passwordRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Invalid old password"));
+    }
+
+    @Test
+    void updatePassword_EmptyOldPassword_ShouldReturnBadRequest() throws Exception {
+        // Given
+        Map<String, String> passwordRequest = Map.of(
+            "oldPassword", "",
+            "newPassword", "newPassword456"
+        );
+        given(instructorService.updatePassword("john_doe", "", "newPassword456"))
+            .willReturn(false);
+
+        // When & Then
+        mockMvc.perform(put("/api/instructors/password/john_doe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(passwordRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Invalid old password"));
+    }
+
+    @Test
+    void updatePassword_EmptyNewPassword_ShouldReturnBadRequest() throws Exception {
+        // Given
+        Map<String, String> passwordRequest = Map.of(
+            "oldPassword", "password123",
+            "newPassword", ""
+        );
+        given(instructorService.updatePassword("john_doe", "password123", ""))
+            .willReturn(false);
+
+        // When & Then
+        mockMvc.perform(put("/api/instructors/password/john_doe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(passwordRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Invalid old password"));
+    }
+
+    @Test
+    void updatePassword_MissingOldPassword_ShouldReturnBadRequest() throws Exception {
+        // Given
+        Map<String, String> passwordRequest = Map.of(
+            "newPassword", "newPassword456"
+        );
+
+        // When & Then
+        mockMvc.perform(put("/api/instructors/password/john_doe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(passwordRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updatePassword_MissingNewPassword_ShouldReturnBadRequest() throws Exception {
+        // Given
+        Map<String, String> passwordRequest = Map.of(
+            "oldPassword", "password123"
+        );
+
+        // When & Then
+        mockMvc.perform(put("/api/instructors/password/john_doe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(passwordRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updatePassword_InvalidJsonBody_ShouldReturnBadRequest() throws Exception {
+        // When & Then
+        mockMvc.perform(put("/api/instructors/password/john_doe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ invalid json }"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updatePassword_EmptyJsonBody_ShouldReturnBadRequest() throws Exception {
+        // When & Then
+        mockMvc.perform(put("/api/instructors/password/john_doe")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isBadRequest());
     }
 }

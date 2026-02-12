@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -271,5 +272,243 @@ class InstructorServiceTest {
         
         verify(instructorRepository, times(1)).save(newInstructor);
         verify(instructorRepository, times(1)).findById(5L);
+    }
+
+    // Test cases for updatePassword() method
+    @Test
+    void updatePassword_ValidCredentials_ShouldReturnTrue() {
+        // Given
+        given(instructorRepository.findByUsername("john_doe")).willReturn(Optional.of(instructor1));
+        given(instructorRepository.save(instructor1)).willReturn(instructor1);
+
+        // When
+        boolean result = instructorService.updatePassword("john_doe", "password123", "newPassword456");
+
+        // Then
+        assertThat(result).isTrue();
+        assertThat(instructor1.getPassword()).isEqualTo("newPassword456");
+        
+        verify(instructorRepository, times(1)).findByUsername("john_doe");
+        verify(instructorRepository, times(1)).save(instructor1);
+    }
+
+    @Test
+    void updatePassword_InvalidOldPassword_ShouldReturnFalse() {
+        // Given
+        given(instructorRepository.findByUsername("john_doe")).willReturn(Optional.of(instructor1));
+
+        // When
+        boolean result = instructorService.updatePassword("john_doe", "wrongPassword", "newPassword456");
+
+        // Then
+        assertThat(result).isFalse();
+        assertThat(instructor1.getPassword()).isEqualTo("password123"); // Should remain unchanged
+        
+        verify(instructorRepository, times(1)).findByUsername("john_doe");
+        verify(instructorRepository, never()).save(any(Instructor.class));
+    }
+
+    @Test
+    void updatePassword_UserNotFound_ShouldReturnFalse() {
+        // Given
+        given(instructorRepository.findByUsername("nonexistent")).willReturn(Optional.empty());
+
+        // When
+        boolean result = instructorService.updatePassword("nonexistent", "password123", "newPassword456");
+
+        // Then
+        assertThat(result).isFalse();
+        
+        verify(instructorRepository, times(1)).findByUsername("nonexistent");
+        verify(instructorRepository, never()).save(any(Instructor.class));
+    }
+
+    @Test
+    void updatePassword_NullUsername_ShouldReturnFalse() {
+        // Given
+        given(instructorRepository.findByUsername(null)).willReturn(Optional.empty());
+
+        // When
+        boolean result = instructorService.updatePassword(null, "password123", "newPassword456");
+
+        // Then
+        assertThat(result).isFalse();
+        
+        verify(instructorRepository, times(1)).findByUsername(null);
+        verify(instructorRepository, never()).save(any(Instructor.class));
+    }
+
+    @Test
+    void updatePassword_EmptyUsername_ShouldReturnFalse() {
+        // Given
+        given(instructorRepository.findByUsername("")).willReturn(Optional.empty());
+
+        // When
+        boolean result = instructorService.updatePassword("", "password123", "newPassword456");
+
+        // Then
+        assertThat(result).isFalse();
+        
+        verify(instructorRepository, times(1)).findByUsername("");
+        verify(instructorRepository, never()).save(any(Instructor.class));
+    }
+
+    @Test
+    void updatePassword_NullOldPassword_ShouldReturnFalse() {
+        // Given
+        given(instructorRepository.findByUsername("john_doe")).willReturn(Optional.of(instructor1));
+
+        // When
+        boolean result = instructorService.updatePassword("john_doe", null, "newPassword456");
+
+        // Then
+        assertThat(result).isFalse();
+        assertThat(instructor1.getPassword()).isEqualTo("password123"); // Should remain unchanged
+        
+        verify(instructorRepository, times(1)).findByUsername("john_doe");
+        verify(instructorRepository, never()).save(any(Instructor.class));
+    }
+
+    @Test
+    void updatePassword_EmptyOldPassword_ShouldReturnFalse() {
+        // Given
+        given(instructorRepository.findByUsername("john_doe")).willReturn(Optional.of(instructor1));
+
+        // When
+        boolean result = instructorService.updatePassword("john_doe", "", "newPassword456");
+
+        // Then
+        assertThat(result).isFalse();
+        assertThat(instructor1.getPassword()).isEqualTo("password123"); // Should remain unchanged
+        
+        verify(instructorRepository, times(1)).findByUsername("john_doe");
+        verify(instructorRepository, never()).save(any(Instructor.class));
+    }
+
+    @Test
+    void updatePassword_NullNewPassword_ShouldUpdateToNull() {
+        // Given
+        given(instructorRepository.findByUsername("john_doe")).willReturn(Optional.of(instructor1));
+        given(instructorRepository.save(instructor1)).willReturn(instructor1);
+
+        // When
+        boolean result = instructorService.updatePassword("john_doe", "password123", null);
+
+        // Then
+        assertThat(result).isTrue();
+        assertThat(instructor1.getPassword()).isNull();
+        
+        verify(instructorRepository, times(1)).findByUsername("john_doe");
+        verify(instructorRepository, times(1)).save(instructor1);
+    }
+
+    @Test
+    void updatePassword_EmptyNewPassword_ShouldUpdateToEmpty() {
+        // Given
+        given(instructorRepository.findByUsername("john_doe")).willReturn(Optional.of(instructor1));
+        given(instructorRepository.save(instructor1)).willReturn(instructor1);
+
+        // When
+        boolean result = instructorService.updatePassword("john_doe", "password123", "");
+
+        // Then
+        assertThat(result).isTrue();
+        assertThat(instructor1.getPassword()).isEmpty();
+        
+        verify(instructorRepository, times(1)).findByUsername("john_doe");
+        verify(instructorRepository, times(1)).save(instructor1);
+    }
+
+    @Test
+    void updatePassword_SamePassword_ShouldUpdateSuccessfully() {
+        // Given
+        given(instructorRepository.findByUsername("john_doe")).willReturn(Optional.of(instructor1));
+        given(instructorRepository.save(instructor1)).willReturn(instructor1);
+
+        // When
+        boolean result = instructorService.updatePassword("john_doe", "password123", "password123");
+
+        // Then
+        assertThat(result).isTrue();
+        assertThat(instructor1.getPassword()).isEqualTo("password123");
+        
+        verify(instructorRepository, times(1)).findByUsername("john_doe");
+        verify(instructorRepository, times(1)).save(instructor1);
+    }
+
+    @Test
+    void updatePassword_RepositoryFindThrowsException_ShouldPropagateException() {
+        // Given
+        given(instructorRepository.findByUsername("john_doe"))
+            .willThrow(new RuntimeException("Database connection error"));
+
+        // When & Then
+        assertThatThrownBy(() -> instructorService.updatePassword("john_doe", "password123", "newPassword456"))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Database connection error");
+
+        verify(instructorRepository, times(1)).findByUsername("john_doe");
+        verify(instructorRepository, never()).save(any(Instructor.class));
+    }
+
+    @Test
+    void updatePassword_RepositorySaveThrowsException_ShouldPropagateException() {
+        // Given
+        given(instructorRepository.findByUsername("john_doe")).willReturn(Optional.of(instructor1));
+        given(instructorRepository.save(instructor1))
+            .willThrow(new RuntimeException("Database save error"));
+
+        // When & Then
+        assertThatThrownBy(() -> instructorService.updatePassword("john_doe", "password123", "newPassword456"))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Database save error");
+
+        verify(instructorRepository, times(1)).findByUsername("john_doe");
+        verify(instructorRepository, times(1)).save(instructor1);
+    }
+
+    @Test
+    void updatePassword_MultipleConsecutiveUpdates_ShouldWorkCorrectly() {
+        // Given
+        given(instructorRepository.findByUsername("john_doe")).willReturn(Optional.of(instructor1));
+        given(instructorRepository.save(instructor1)).willReturn(instructor1);
+
+        // When - First update
+        boolean result1 = instructorService.updatePassword("john_doe", "password123", "newPassword456");
+        
+        // Update the instructor object state to reflect the new password
+        instructor1.setPassword("newPassword456");
+        
+        // When - Second update
+        boolean result2 = instructorService.updatePassword("john_doe", "newPassword456", "finalPassword789");
+
+        // Then
+        assertThat(result1).isTrue();
+        assertThat(result2).isTrue();
+        assertThat(instructor1.getPassword()).isEqualTo("finalPassword789");
+        
+        verify(instructorRepository, times(2)).findByUsername("john_doe");
+        verify(instructorRepository, times(2)).save(instructor1);
+    }
+
+    // Integration test with realistic workflow
+    @Test
+    void updatePassword_CompleteWorkflow_ShouldWorkEndToEnd() {
+        // Given - Create a fresh instructor for this test
+        Instructor testInstructor = new Instructor("test_user", "originalPassword", "Test", "User");
+        testInstructor.setId(10L);
+        
+        given(instructorRepository.findByUsername("test_user")).willReturn(Optional.of(testInstructor));
+        given(instructorRepository.save(testInstructor)).willReturn(testInstructor);
+
+        // When
+        boolean result = instructorService.updatePassword("test_user", "originalPassword", "superSecureNewPassword123!");
+
+        // Then
+        assertThat(result).isTrue();
+        assertThat(testInstructor.getPassword()).isEqualTo("superSecureNewPassword123!");
+        
+        verify(instructorRepository, times(1)).findByUsername("test_user");
+        verify(instructorRepository, times(1)).save(testInstructor);
     }
 }
