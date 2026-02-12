@@ -28,4 +28,17 @@ public class InstructorService {
     public Optional<Instructor> getInstructorByUsername(String username) {
         return instructorRepository.findByUsername(username);
     }
+
+    public boolean updatePassword(String username, String oldPassword, String newPassword) {
+        Optional<Instructor> instructorOpt = instructorRepository.findByUsername(username);
+        if (instructorOpt.isPresent()) {
+            Instructor instructor = instructorOpt.get();
+            if (instructor.getPassword().equals(oldPassword)) {
+                instructor.setPassword(newPassword);
+                instructorRepository.save(instructor);
+                return true;
+            }
+        }
+        return false;
+    }
 }

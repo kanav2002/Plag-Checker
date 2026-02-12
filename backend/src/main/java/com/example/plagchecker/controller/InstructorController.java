@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/instructors")
@@ -44,5 +45,18 @@ public class InstructorController {
         Optional<Instructor> instructor = instructorService.getInstructorByUsername(username);
         return instructor.map(ResponseEntity::ok)
                         .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/password/{username}")
+    public ResponseEntity<String> updatePassword(@PathVariable String username, @RequestBody Map<String, String> passwords) {
+        String oldPassword = passwords.get("oldPassword");
+        String newPassword = passwords.get("newPassword");
+        
+        boolean updated = instructorService.updatePassword(username, oldPassword, newPassword);
+        if (updated) {
+            return ResponseEntity.ok("Password updated successfully");
+        } else {
+            return ResponseEntity.badRequest().body("Invalid old password");
+        }
     }
 }
