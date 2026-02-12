@@ -1,10 +1,12 @@
 package com.example.plagchecker.controller;
 
+import com.example.plagchecker.dto.LoginRequest;
 import com.example.plagchecker.model.Instructor;
 import com.example.plagchecker.service.InstructorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.Map;
@@ -40,11 +42,11 @@ public class InstructorController {
                         .orElse(ResponseEntity.notFound().build());
     }
     
-    @GetMapping("/username/{username}")
-    public ResponseEntity<Instructor> getInstructorByUsername(@PathVariable String username) {
-        Optional<Instructor> instructor = instructorService.getInstructorByUsername(username);
-        return instructor.map(ResponseEntity::ok)
-                        .orElse(ResponseEntity.notFound().build());
+    @PostMapping("/login")
+    public ResponseEntity<Instructor> login(@RequestBody LoginRequest request) {
+        return instructorService.authenticate(request.getUsername(), request.getPassword())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 
     @PutMapping("/password/{username}")

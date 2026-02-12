@@ -36,26 +36,32 @@ function App() {
     const handleSignIn = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`http://localhost:8080/api/instructors/username/${signInData.username}`);
-            
-            if (response.ok) {
-                const instructor = await response.json();
-                if (instructor.password === signInData.password) {
-                    setUser(instructor);
-                    setIsLoggedIn(true);
-                    setMessage(`Welcome back, ${instructor.firstName}!`);
-                } else {
-                    setMessage('Wrong username or password');
-                }
-            } else {
-                setMessage('Wrong username or password');
+            const res = await fetch('http://localhost:8080/api/instructors/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(signInData)
+            });
+
+            if (res.status === 401) {
+                setMessage('Invalid username or password');
+                return;
             }
+
+            if (!res.ok) {
+                setMessage('Sign in failed. Please try again.');
+                return;
+            }
+
+            const loggedInUser = await res.json();
+            setUser(loggedInUser);
+            setIsLoggedIn(true);
+            setMessage('Signed in successfully');
+            setShowSignInModal(false);
+            setSignInData({ username: '', password: '' });
         } catch (error) {
-            setMessage('Error connecting to server');
+            console.error('Sign in error:', error);
+            setMessage('Sign in failed. Please try again.');
         }
-        
-        setShowSignInModal(false);
-        setSignInData({ username: '', password: '' });
     };
 
     // Handle Sign Up
@@ -198,7 +204,10 @@ function App() {
                     <div className="button-container">
                         <button 
                             className="btn btn-primary" 
-                            onClick={() => setShowSignInModal(true)}
+                            onClick={() => {
+                                setShowSignInModal(true);
+                                setMessage('');
+                            }}
                         >
                             Sign In
                         </button>
@@ -248,6 +257,14 @@ function App() {
                                         required
                                     />
                                 </div>
+                                
+                                {/* Error message display inside modal */}
+                                {message && !isLoggedIn && (
+                                    <div className="form-error">
+                                        {message}
+                                    </div>
+                                )}
+                                
                                 <div className="form-actions">
                                     <button type="button" className="btn btn-cancel" onClick={closeModals}>
                                         Cancel
@@ -437,7 +454,7 @@ function App() {
                             <h2>Change Password</h2>
                             <button className="close-btn" onClick={() => setShowSettingsModal(false)}>&times;</button>
                         </div>
-                        
+
                         <form onSubmit={handlePasswordChange}>
                             <div className="form-group">
                                 <label htmlFor="oldPassword">Current Password:</label>

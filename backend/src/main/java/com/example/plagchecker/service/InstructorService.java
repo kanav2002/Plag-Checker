@@ -41,4 +41,9 @@ public class InstructorService {
         }
         return false;
     }
+
+    public Optional<Instructor> authenticate(String username, String password) {
+        return instructorRepository.findByUsername(username)
+                .filter(instructor -> instructor.getPassword().equals(password));
+    }
 }

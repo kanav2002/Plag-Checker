@@ -1,5 +1,6 @@
 package com.example.plagchecker.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,6 +13,7 @@ public class Instructor {
     @Column(unique = true, nullable = false)
     private String username;
     
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
     

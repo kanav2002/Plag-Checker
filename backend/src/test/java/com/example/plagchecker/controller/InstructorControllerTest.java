@@ -161,41 +161,6 @@ class InstructorControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // Test cases for getInstructorByUsername() method
-    @Test
-    void getInstructorByUsername_InstructorExists_ShouldReturnInstructor() throws Exception {
-        // Given
-        given(instructorService.getInstructorByUsername("john_doe")).willReturn(Optional.of(instructor1));
-
-        // When & Then
-        mockMvc.perform(get("/api/instructors/username/john_doe"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(1)))  // Fixed: removed extra 'd'
-                .andExpect(jsonPath("$.username", is("john_doe")))
-                .andExpect(jsonPath("$.firstName", is("John")))
-                .andExpect(jsonPath("$.lastName", is("Doe")));
-    }
-
-    @Test
-    void getInstructorByUsername_InstructorNotFound_ShouldReturnNotFound() throws Exception {
-        // Given
-        given(instructorService.getInstructorByUsername(anyString())).willReturn(Optional.empty());
-
-        // When & Then
-        mockMvc.perform(get("/api/instructors/username/nonexistent"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getInstructorByUsername_EmptyUsername_ShouldReturnNotFound() throws Exception {
-        // Given
-        given(instructorService.getInstructorByUsername("")).willReturn(Optional.empty());
-
-        // When & Then
-        mockMvc.perform(get("/api/instructors/username/"))
-                .andExpect(status().isNotFound());
-    }
-
     @Test
     void updatePassword_ValidCredentials_ShouldReturnSuccessMessage() throws Exception {
         // Given
